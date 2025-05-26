@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block title %}Категории{% endblock %}
+
+{% block categories %}
+
+
+
+<div class="row card-group row-cols-1 row-cols-md-1 m-5 g-4">
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+    <div class="d-flex align-items-center, justify-content-center">
+        <h5 class="align-items-center">
+            Категории
+        </h5>
+    </div>
+
+
+
+    <div class="col">
+        <div type="button" data-bs-toggle="modal" data-bs-target="#addcatModal" class="card mx-auto"
+            style="max-width: 20rem; border: 2px dashed #0d6efd;">
+            <div class="card-body d-flex align-items-center justify-content-center" style="height: 3rem;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="#0d6efd" class="bi bi-plus-lg"
+                    viewBox="0 0 16 16">
+                    <path fill-rule="evenodd"
+                        d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2" />
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="addcatModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="addcatModalLabel">Создать категорию</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="post">
+                        <div class="mb-3">
+                            <input type="text" class="form-control" name="categori" placeholder="Название категории">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Создать категорию</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if allcateg|length > 0 %}
+    {% for cat in allcateg %}
+    <a class="col" type="button" href="/categ/{{ cat.id }}" style="text-decoration: none;">
+        <div class="card mx-auto" style="max-width: 20rem;">
+            <div class="card-header">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-tags"
+                    viewBox="0 0 16 16">
+                    <path
+                        d="M3 2v4.586l7 7L14.586 9l-7-7zM2 2a1 1 0 0 1 1-1h4.586a1 1 0 0 1 .707.293l7 7a1 1 0 0 1 0 1.414l-4.586 4.586a1 1 0 0 1-1.414 0l-7-7A1 1 0 0 1 2 6.586z" />
+                    <path
+                        d="M5.5 5a.5.5 0 1 1 0-1 .5.5 0 0 1 0 1m0 1a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3M1 7.086a1 1 0 0 0 .293.707L8.75 15.25l-.043.043a1 1 0 0 1-1.414 0l-7-7A1 1 0 0 1 0 7.586V3a1 1 0 0 1 1-1z" />
+                </svg>
+            </div>
+            <div class="card-body d-flex align-items-center">
+                <h4 class="card-title">{{ cat.naming }}</h4>
+            </div>
+        </div>
+    </a>
+    {% endfor %}
+    {% else %}
+    <div class="d-flex align-items-center, justify-content-center">
+        <p class="align-items-center">
+            Добавьте новую категорию
+        </p>
+    </div>
+    {% endif %}
+    <div class="mb-5">
+    </div>
+</div>
+
+{% endblock %}

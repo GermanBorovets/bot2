@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+
+{% block title %}Счет {{ allcheck.title }}{% endblock %}
+
+{% block checks%}
+
+<div class="card mx-auto m-5" style="max-width: 30rem; border: none;">
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+    <div class="card-body mb-5">
+        <div class="mb-2 d-flex justify-content-between">
+            <a href="/" class="link-secondary link-underline-opacity-0">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor"
+                    class="bi bi-arrow-left" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd"
+                        d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8" />
+                </svg>
+                Назад
+            </a>
+            <a class="mb-2 link-danger link-underline-opacity-0" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="currentColor" class="bi bi-trash"
+                    viewBox="0 0 16 16">
+                    <path
+                        d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z" />
+                    <path
+                        d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z" />
+                </svg>
+            </a>
+
+            <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+                aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h1 class="modal-title fs-5" id="exampleModalLabel">Удалить счет?</h1>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Отмена</button>
+                            <a href="/checks/{{ allcheck.id }}/del" type="button" class="btn btn-danger">Удалить</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+
+
+        </div>
+        <h5 class="mb-3" style="text-align: center;">Транзакции</h5>
+        <h3 class="mb-3 text-secondary" style="text-align: center;">{{ allcheck.title }}</h3>
+        <h1 class="mb-3" style="text-align: center;">{{ allcheck.summ }}₽</h1>
+        <div class="d-flex justify-content-evenly">
+            <a class="mb-3 btn btn-outline-primary border-2 rounded-circle p-2" data-bs-toggle="modal"
+                data-bs-target="#addModal">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-plus"
+                    viewBox="0 0 16 16">
+                    <path
+                        d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
+                </svg>
+            </a>
+            <div class="modal fade" id="addModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h1 class="modal-title fs-5" id="exampleModalLabel">Добавить транзакцию</h1>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form method="post">
+                                <div class="mb-3">
+                                    <input type="number" class="form-control mb-2" name="summ_op" placeholder="Сумма">
+                                    <input type="text" class="form-control mb-2" name="comm_op"
+                                        placeholder="Комментарий">
+                                    <label class="form-label">Выберите категорию:</label>
+                                    <select class="form-select mb-2" id="categories" name="categories">
+                                        {% for cat in allcateg %}
+                                        <option selected>{{ cat.naming }}</option>
+                                        {% endfor %}
+                                        <option>Без категории</option>
+                                    </select>
+                                    <a href="/categories/" style="border: 1px dashed;"
+                                        class="btn btn-outline-primary mb-2">
+                                        Добавить новую категорию
+                                    </a>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Добавить</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="list-group">
+            {% if allopp|length > 0 %}
+            {% for op in allopp %}
+            {% if op.check_id == allcheck.id: %}
+            <a href="/oper/{{ op.id }}" class="list-group-item list-group-item-action">
+                <span class="badge text-bg-secondary">{{ op.check_name }}</span>
+                <small>{{ moment(op.date).format('DD.MM.YYYY HH:mm') }}</small>
+                <div class="d-flex justify-content-between">
+                    <h5>{{ op.categ_id }}</h5>
+                    <h5>{{ op.summa }}₽</h5>
+                </div>
+                {{ op.comment }}
+            </a>
+            {% endif %}
+            {% endfor %}
+            {% else %}
+            <div class="d-flex align-items-center, justify-content-center">
+                <p class="align-items-center">
+                    Транзакций пока нет
+                </p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

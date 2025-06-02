@@ -1,12 +1,7 @@
 from flask import Flask, render_template, request, redirect, send_file, url_for, flash, session
 from flask_sqlalchemy import SQLAlchemy
-from flask_wtf import FlaskForm
-from wtforms import StringField
-from wtforms.validators import DataRequired, Email
 from datetime import datetime
 from flask_moment import Moment
-from flask_migrate import Migrate
-import flask_excel as excel
 from io import BytesIO
 import pandas as pd
 import secrets
@@ -17,7 +12,6 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///checks.db'
 db = SQLAlchemy(app)
 moment = Moment(app)
-migrate = Migrate(app, db, render_as_batch=True)
 secret = secrets.token_urlsafe(32)
 app.secret_key = secret
 PIN_CODE = os.environ.get('PIN_CODE', '2948')

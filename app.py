@@ -9,7 +9,8 @@ import os
 
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///checks.db'
+basedir = os.path.abspath(os.path.dirname(__file__))
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'checks.db')
 db = SQLAlchemy(app)
 moment = Moment(app)
 secret = secrets.token_urlsafe(32)

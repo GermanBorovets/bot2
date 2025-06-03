@@ -9,8 +9,7 @@ import os
 
 
 app = Flask(__name__)
-basedir = os.path.abspath(os.path.dirname(__file__))
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'instance', 'checks.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///checks.db'
 db = SQLAlchemy(app)
 moment = Moment(app)
 secret = secrets.token_urlsafe(32)
@@ -51,7 +50,7 @@ class Operations(db.Model):
     categ_id = db.Column(db.String(40))
     
     
-@app.before_first_request
+@app.before_request
 def initialize_database():
     with app.app_context():
         db.create_all()

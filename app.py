@@ -262,5 +262,5 @@ def download():
     return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name='Операции.xlsx')
 
 
-    
-    
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', debug=True, port=8080)

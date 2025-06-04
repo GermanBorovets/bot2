@@ -7,15 +7,19 @@ import pandas as pd
 import secrets
 import openpyxl
 import os
+import psycopg2
+from dotenv import load_dotenv
+
+# Загрузка переменных окружения ДО создания приложения
+load_dotenv()
 
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///checks.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
 db = SQLAlchemy(app)
 moment = Moment(app)
-secret = secrets.token_urlsafe(32)
-app.secret_key = secret
-PIN_CODE = os.environ.get('PIN_CODE', '2948')
+app.secret_key = os.environ.get('SECRET_KEY')
+PIN_CODE = os.environ.get('PIN_CODE')
 
 
 def login_required(view_func):
@@ -50,12 +54,31 @@ class Operations(db.Model):
     check_name = db.Column(db.String(40))
     categ_id = db.Column(db.String(40))
     
+
+        
     
-@app.before_request
-def initialize_database():
-    with app.app_context():
-        db.create_all()
+def rub_to_kop(rub_str):
+    """Конвертирует строку с рублями (1.23) в копейки (123)"""
+    try:
+        if ',' in rub_str:
+            rub_str = rub_str.replace(',', '.')
+        rub = float(rub_str)
+        return int(round(rub * 100))
+    except (ValueError, TypeError):
+        return 0
+
+
+def kop_to_rub(kop):
+    """Конвертирует копейки в рубли с форматированием"""
+    return f"{kop / 100:.2f}"
+
+
+@app.template_filter('rub')
+def rub_format(kop):
+    """Фильтр для форматирования копеек в рубли"""
+    return f"{kop / 100:.2f}"
     
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -135,19 +158,24 @@ def checks_id(id):
     allopp = Operations.query.order_by(Operations.date.desc()).all()
     allcateg = Categories.query.all()
     if request.method == 'POST':
-        summa = request.form['summ_op']
-        comment = request.form['comm_op']
-        categ = request.form['categories']
-        check_name = allcheck.title
-        errors = []
-        if not summa:
-            errors.append('Сумма не может быть никакой, лол')
-        if errors:
-            for error in errors:
-                flash(error)
+        summa_kop = rub_to_kop(request.form['summ_op'])
+        
+        # Проверка на валидность суммы
+        if summa_kop <= 0:
+            flash('Сумма должна быть положительной')
             return redirect(f'/checks/{id}')
-        oper = Operations(summa=summa, comment=comment, check_id=id, check_name=check_name, categ_id=categ)
-        allcheck.summ += int(summa)
+        
+        # Создаем операцию с суммой в копейках
+        oper = Operations(
+            summa=summa_kop,
+            comment=request.form['comm_op'],
+            check_id=id,
+            check_name=allcheck.title,
+            categ_id=request.form['categories']
+        )
+        
+        # Обновляем сумму счета
+        allcheck.summ += summa_kop
         try:
             db.session.add(oper)
             db.session.commit()
@@ -217,11 +245,21 @@ def oper_id(id):
     n = allopp.summa
     
     if request.method == 'POST':
-        checkelem.summ -= n
-        allopp.summa = request.form['summ_up']
+        new_summa_kop = rub_to_kop(request.form['summ_up'])
+        
+        # Проверка суммы
+        if new_summa_kop <= 0:
+            flash('Сумма должна быть положительной')
+            return redirect(f'/oper/{id}')
+        
+        # Обновляем суммы
+        old_summa_kop = allopp.summa
+        delta = new_summa_kop - old_summa_kop
+        
+        checkelem.summ += delta
+        allopp.summa = new_summa_kop
         allopp.comment = request.form['comment_up']
         allopp.categ_id = request.form['categories']
-        checkelem.summ += int(request.form['summ_up'])
         try:
             db.session.commit()
             return redirect(f'/oper/{id}')
@@ -256,7 +294,7 @@ def categ(id):
 @login_required
 def download():
     opers = Operations.query.all()
-    data = [{'№': oper.id, 'Сумма': oper.summa, 'Комментарий': oper.comment, 'Дата': oper.date, 'Счет': oper.check_name, 'Категория': oper.categ_id}
+    data = [{'№': oper.id, 'Сумма': oper.summa / 100.0, 'Комментарий': oper.comment, 'Дата': oper.date, 'Счет': oper.check_name, 'Категория': oper.categ_id}
             for oper in opers]
     df = pd.DataFrame(data)
     
@@ -266,6 +304,8 @@ def download():
     
     output.seek(0)
     return send_file(output, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name='Операции.xlsx')
+
+
 
 
 if __name__ == '__main__':

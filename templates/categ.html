@@ -86,7 +86,7 @@
                 <small>{{ moment(op.date).format('DD.MM.YYYY HH:mm') }}</small>
                 <div class="d-flex justify-content-between">
                     <h5>{{ op.categ_id }}</h5>
-                    <h5>{{ op.summa }}₽</h5>
+                    <h5>{{ op.summa / 100 }}₽</h5>
                 </div>
                 {{ op.comment }}
             </a>

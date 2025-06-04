@@ -161,10 +161,6 @@ def checks_id(id):
     if request.method == 'POST':
         summa_kop = rub_to_kop(request.form['summ_op'])
         
-        # Проверка на валидность суммы
-        if summa_kop <= 0:
-            flash('Сумма должна быть положительной')
-            return redirect(f'/checks/{id}')
         
         # Создаем операцию с суммой в копейках
         oper = Operations(
@@ -248,10 +244,6 @@ def oper_id(id):
     if request.method == 'POST':
         new_summa_kop = rub_to_kop(request.form['summ_up'])
         
-        # Проверка суммы
-        if new_summa_kop <= 0:
-            flash('Сумма должна быть положительной')
-            return redirect(f'/oper/{id}')
         
         # Обновляем суммы
         old_summa_kop = allopp.summa

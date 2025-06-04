@@ -15,10 +15,11 @@ load_dotenv()
 
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://gen_user::\yB4|c~TFuxQf@185.178.46.109:5432/default_db'
 db = SQLAlchemy(app)
 moment = Moment(app)
-app.secret_key = os.environ.get('SECRET_KEY')
+secret = secrets.token_urlsafe(32)
+app.secret_key = secret
 PIN_CODE = os.environ.get('PIN_CODE')
 
 

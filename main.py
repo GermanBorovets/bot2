@@ -23,6 +23,7 @@ app.secret_key = secret
 PIN_CODE = os.environ.get('PIN_CODE')
 
 
+
 def login_required(view_func):
     def wrapper(*args, **kwargs):
         if not session.get('authenticated'):
@@ -54,9 +55,15 @@ class Operations(db.Model):
     check_id = db.Column(db.Integer)
     check_name = db.Column(db.String(40))
     categ_id = db.Column(db.String(40))
-    
-
         
+
+     
+class Debts(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    summ = db.Column(db.Integer)
+    debt = db.Column(db.String(40), nullable=False)
+        
+    
     
 def rub_to_kop(rub_str):
     """Конвертирует строку с рублями (1.23) в копейки (123)"""
@@ -123,7 +130,7 @@ def index():
         except:
             return 'При добавлении счета произошла ошибка!' 
     else:
-        return render_template('index.html', allchecks=allchecks)
+        return render_template('index.html', allchecks=allchecks)   
     
     
    
@@ -149,6 +156,50 @@ def categories():
             return 'При добавлении категории произошла ошибка!'
     else:
         return render_template('categories.html', allcateg=allcateg)
+    
+    
+    
+@app.route("/debts", methods=['POST', 'GET'])    
+@login_required 
+def debts():
+    alldebts = Debts.query.all()
+    if request.method == 'POST':
+        debt = request.form['debtname']
+        summ = rub_to_kop(request.form['debtsumm'])
+        errors = []
+        if not debt:
+            errors.append('Имя не может быть пустым')
+        if errors:
+            for error in errors:
+                flash(error)
+            return redirect(url_for('debts'))
+        debtadd = Debts(summ=summ, debt=debt)
+        try:
+            db.session.add(debtadd)
+            db.session.commit()
+            return redirect('/debts')
+        except:
+            return 'При добавлении долга произошла ошибка!'
+    else:
+        return render_template('debts.html', alldebts=alldebts)
+    
+    
+    
+@app.route('/debt/<int:id>', methods=['POST', 'GET'])
+@login_required
+def debt(id):
+    alldebt = Debts.query.get(id)
+    if request.method == 'POST':
+        alldebt.debt = request.form['debtname']
+        alldebt.summ = rub_to_kop(request.form['debtsumm'])
+        try:
+            db.session.commit()
+            return redirect(f'/debt/{id}')
+        except:
+            return 'Не удалось редактировать долг'
+    
+    return render_template('debt.html', alldebt=alldebt)
+    
     
     
     
@@ -232,6 +283,19 @@ def categ_delete(id):
         return "При удалении категории произошла ошибка"
     
     
+
+@app.route('/debt/<int:id>/del')
+@login_required
+def debt_delete(id):
+    debt = Debts.query.get_or_404(id)
+    try:
+        db.session.delete(debt)
+        db.session.commit()
+        return redirect(f'/debts')
+    except:
+        return "При удалении долга произошла ошибка"    
+    
+    
     
 @app.route('/oper/<int:id>/', methods=['POST', 'GET'])
 @login_required
@@ -269,10 +333,12 @@ def categ(id):
     allcateg = Categories.query.get(id)
     allopp = Operations.query.order_by(Operations.date.desc()).all()
     allcheck = Checks.query.all()
+    last_name = allcateg.naming
     if request.method == 'POST':
         allcateg.naming = request.form['name']
         for i in allopp:
-            i.categ_id = allcateg.naming
+            if i.categ_id == last_name:
+                i.categ_id = allcateg.naming
         try:
             db.session.commit()
             return redirect(f'/categ/{id}')
@@ -300,6 +366,13 @@ def download():
 
 
 
+def create_tables():
+    """Отдельная функция для создания таблиц"""
+    with app.app_context():
+        db.create_all()
+        print("Таблицы успешно созданы в PostgreSQL")
+
+
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', debug=False, port=8080)
+    app.run(host='0.0.0.0', debug=True, port=8080)

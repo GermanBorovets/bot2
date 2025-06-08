@@ -17,13 +17,10 @@ load_dotenv()
 
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///checks.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://gen_user::\yB4|c~TFuxQf@185.178.46.109:5432/default_db'
 db = SQLAlchemy(app)
 moment = Moment(app)
-if not os.environ.get("FLASK_SECRET_KEY"):
-    with open(".env", "a") as env_file:
-        env_file.write(f'\nFLASK_SECRET_KEY="{secrets.token_urlsafe(64)}"')
-app.secret_key = os.environ.get("FLASK_SECRET_KEY")
+app.secret_key = "38ZNl5gHOntQqR_cN1QgEDmkPUGMSyE20FplDIQYancixFyxC0H-Yxvxm3NlH__ip-TsrHYxQoCmVE5x-TtlZw"
 PIN_CODE = os.environ.get('PIN_CODE')
 
 
@@ -204,7 +201,7 @@ def logout():
 
 # --- Главная -----------------------------------------------------------------------------------
 @app.route("/", methods=['POST', 'GET'])
-#@login_required
+@login_required
 def index():
     allchecks = Checks.query.all()
     if request.method == 'POST':
@@ -228,7 +225,7 @@ def index():
     
     
 @app.route('/download/')
-#@login_required
+@login_required
 def download():
     opers = Operations.query.all()
     data = [{'№': oper.id, 'Сумма': oper.summa / 100.0, 'Комментарий': oper.comment, 'Дата': oper.date, 'Счет': oper.check_name, 'Категория': oper.categ_id}
@@ -248,7 +245,7 @@ def download():
     
 # --- Счета -----------------------------------------------------------------------------------
 @app.route('/checks/<int:id>', methods=['POST', 'GET'])
-#@login_required
+@login_required
 def checks_id(id):
     allcheck = Checks.query.get(id)
     allopp = Operations.query.order_by(Operations.date.desc()).all()
@@ -279,7 +276,7 @@ def checks_id(id):
 
 
 @app.route('/checks/<int:id>/del')
-#@login_required
+@login_required
 def checks_delete(id):
     allcheck = Checks.query.get_or_404(id)
     allop = Operations.query.all()
@@ -299,7 +296,7 @@ def checks_delete(id):
 
 # --- Операции -----------------------------------------------------------------------------------
 @app.route('/oper/<int:id>/', methods=['POST', 'GET'])
-#@login_required
+@login_required
 def oper_id(id):
     allopp = Operations.query.get(id)
     checkelem = Checks.query.get(allopp.check_id)
@@ -327,7 +324,7 @@ def oper_id(id):
 
 
 @app.route('/oper/<int:id>/del')
-#@login_required
+@login_required
 def oper_delete(id):
     allop = Operations.query.get_or_404(id)
     checkel = Checks.query.get(allop.check_id)
@@ -345,7 +342,7 @@ def oper_delete(id):
 
 # --- Долги -----------------------------------------------------------------------------------
 @app.route("/debts/", methods=['POST', 'GET'])    
-#@login_required 
+@login_required 
 def debts():
     alldebts = Debts.query.all()
     total_debt = sum(debt.summ for debt in alldebts)
@@ -371,7 +368,7 @@ def debts():
     
     
 @app.route('/debt/<int:id>', methods=['POST', 'GET'])
-#@login_required
+@login_required
 def debt(id):
     alldebt = Debts.query.get(id)
     if request.method == 'POST':
@@ -387,7 +384,7 @@ def debt(id):
     
     
 @app.route('/debt/<int:id>/del')
-#@login_required
+@login_required
 def debt_delete(id):
     debt = Debts.query.get_or_404(id)
     try:
@@ -403,7 +400,7 @@ def debt_delete(id):
 
 # --- Категории -----------------------------------------------------------------------------------
 @app.route("/categories/", methods=['POST', 'GET'])
-#@login_required 
+@login_required 
 def categories():
     allcateg = Categories.query.all()
     if request.method == 'POST':
@@ -427,7 +424,7 @@ def categories():
 
 
 @app.route('/categ/<int:id>', methods=['POST', 'GET'])
-#@login_required
+@login_required
 def categ(id):
     allcateg = Categories.query.get(id)
     allopp = Operations.query.order_by(Operations.date.desc()).all()
@@ -448,7 +445,7 @@ def categ(id):
 
 
 @app.route('/categ/<int:id>/del')
-#@login_required   
+@login_required   
 def categ_delete(id):
     allcateg = Categories.query.get_or_404(id)
     allopp = Operations.query.all()
@@ -469,6 +466,7 @@ def categ_delete(id):
 
 # --- Вкладка металл -----------------------------------------------------------------------------------
 @app.route('/metall/')
+@login_required
 def metall():
     return render_template('metall/metall.html')
 
@@ -478,6 +476,7 @@ def metall():
 
 # --- Менеджеры -----------------------------------------------------------------------------------
 @app.route('/managers', methods=['GET', 'POST'])
+@login_required
 def managers():
     if request.method == 'POST':
         name = request.form['name']
@@ -500,6 +499,7 @@ def managers():
 
 
 @app.route('/managers/<int:id>/edit', methods=['GET', 'POST'])
+@login_required
 def edit_manager(id):
     manager = Manager.query.get_or_404(id)
     shipment = Shipment.query.filter_by(manager=manager.name)
@@ -523,6 +523,7 @@ def edit_manager(id):
 
 
 @app.route('/managers/<int:id>')
+@login_required
 def manager_detail(id):
     manager = Manager.query.get_or_404(id)
     allchecks = Checks.query.all()
@@ -610,6 +611,7 @@ def manager_detail(id):
 
 
 @app.route('/managers/<int:id>/delete', methods=['POST'])
+@login_required
 def delete_manager(id):
     manager = Manager.query.get_or_404(id)
     
@@ -623,6 +625,7 @@ def delete_manager(id):
 
 # --- Изменения баланса менеджера ---
 @app.route('/managers/<int:manager_id>/pay>', methods=['POST'])
+@login_required
 def pay_manager(manager_id):
     manager = Manager.query.get_or_404(manager_id)
     
@@ -666,6 +669,7 @@ def pay_manager(manager_id):
 
 
 @app.route('/managers/<int:manager_add_id>/add>', methods=['POST'])
+@login_required
 def add_manager(manager_add_id):
     manager = Manager.query.get_or_404(manager_add_id)
     
@@ -689,6 +693,7 @@ def add_manager(manager_add_id):
 
 
 @app.route('/managers/<int:manager_fine_id>/fine>', methods=['POST'])
+@login_required
 def fine_manager(manager_fine_id):
     manager = Manager.query.get_or_404(manager_fine_id)
     
@@ -711,6 +716,7 @@ def fine_manager(manager_fine_id):
 
 
 @app.route('/op_detail/<int:id>', methods=['GET', 'POST'])
+@login_required
 def op_detail(id):
     ManBalance = ManagerBalance.query.get(id)
     manager = Manager.query.get(ManBalance.manager_id)
@@ -733,6 +739,7 @@ def op_detail(id):
 
 
 @app.route('/op_detail/<int:id>/del')
+@login_required
 def op_delete(id):
     ManBalance = ManagerBalance.query.get_or_404(id)
     manager = Manager.query.get(ManBalance.manager_id)
@@ -746,6 +753,7 @@ def op_delete(id):
 
 
 @app.route('/managers/<int:id>/export_operations', methods=['GET'])
+@login_required
 def export_manager_operations(id):
     manager = Manager.query.get_or_404(id)
     
@@ -818,6 +826,7 @@ def export_manager_operations(id):
 
 # --- Сотрудники -----------------------------------------------------------------------------------
 @app.route('/persons', methods=['GET', 'POST'])
+@login_required
 def persons():
     if request.method == 'POST':
         name = request.form['name_persons']
@@ -838,6 +847,7 @@ def persons():
 
 
 @app.route('/persons/<int:id>/edit', methods=['GET', 'POST'])
+@login_required
 def edit_person(id):
     person = Persons.query.get_or_404(id)
     
@@ -855,6 +865,7 @@ def edit_person(id):
 
 
 @app.route('/persons/<int:id>')
+@login_required
 def person_detail(id):
     person = Persons.query.get_or_404(id)
     allchecks = Checks.query.all()
@@ -916,6 +927,7 @@ def person_detail(id):
 
 
 @app.route('/persons/<int:id>/delete', methods=['POST'])
+@login_required
 def delete_person(id):
     person = Persons.query.get_or_404(id)
     
@@ -929,6 +941,7 @@ def delete_person(id):
 
 # --- Изменения баланса сотрудника ---
 @app.route('/persons/<int:person_id>/pay>', methods=['POST'])
+@login_required
 def pay_person(person_id):
     person = Persons.query.get_or_404(person_id)
     
@@ -972,6 +985,7 @@ def pay_person(person_id):
 
 
 @app.route('/persons/<int:person_add_id>/add>', methods=['POST'])
+@login_required
 def add_person(person_add_id):
     person = Persons.query.get_or_404(person_add_id)
     
@@ -995,6 +1009,7 @@ def add_person(person_add_id):
 
 
 @app.route('/persons/<int:person_fine_id>/fine>', methods=['POST'])
+@login_required
 def fine_person(person_fine_id):
     person = Persons.query.get_or_404(person_fine_id)
     
@@ -1017,6 +1032,7 @@ def fine_person(person_fine_id):
 
 
 @app.route('/op_person/<int:id>', methods=['GET', 'POST'])
+@login_required
 def op_person(id):
     PerBalance = PersonsBalance.query.get(id)
     person = Persons.query.get(PerBalance.person_id)
@@ -1039,6 +1055,7 @@ def op_person(id):
 
 
 @app.route('/op_person/<int:id>/del')
+@login_required
 def op_person_delete(id):
     PerBalance = PersonsBalance.query.get_or_404(id)
     person = Persons.query.get(PerBalance.person_id)
@@ -1057,6 +1074,7 @@ def op_person_delete(id):
 
 # --- Отгрузки -----------------------------------------------------------------------------------
 @app.route('/shipments', methods=['GET'])
+@login_required
 def shipments():
     # Фильтрация
     manager_filter = request.args.get('manager')
@@ -1100,12 +1118,14 @@ def shipments():
 
 
 @app.route('/shipments/<int:id>')
+@login_required
 def shipment_detail(id):
     shipment = Shipment.query.get_or_404(id)
     return render_template('metall/shipments/shipment_detail.html', shipment=shipment)
 
 
 @app.route('/add_shipment', methods=['GET', 'POST'])
+@login_required
 def add_shipment():
     managers = [m.name for m in Manager.query.all()]
     
@@ -1166,6 +1186,7 @@ def add_shipment():
 
 
 @app.route('/shipments/<int:id>/edit', methods=['GET', 'POST'])
+@login_required
 def edit_shipment(id):
     shipment = Shipment.query.get_or_404(id)
     managers = [m.name for m in Manager.query.all()]
@@ -1276,6 +1297,7 @@ def edit_shipment(id):
 
 
 @app.route('/shipments/<int:id>/delete', methods=['POST'])
+@login_required
 def delete_shipment(id):
     shipment = Shipment.query.get_or_404(id)
     
@@ -1293,6 +1315,7 @@ def delete_shipment(id):
 
 
 @app.route('/export_shipments', methods=['GET'])
+@login_required
 def export_shipments():
     # Применяем те же фильтры, что и в /shipments
     manager_filter = request.args.get('manager')
@@ -1378,6 +1401,7 @@ def export_shipments():
 
 # --- Аналитика ---
 @app.route('/analytics')
+@login_required
 def analytics():
     # Статистика по менеджерам
     manager_stats = db.session.query(
@@ -1407,6 +1431,7 @@ def analytics():
 
 
 @app.route('/analytics/chart/monthly_delta')
+@login_required
 def monthly_delta_chart():
     monthly_delta = db.session.query(
         Shipment.month,
@@ -1423,6 +1448,7 @@ def monthly_delta_chart():
 
 
 @app.route('/analytics/chart/manager_performance')
+@login_required
 def manager_performance_chart():
     manager_stats = db.session.query(
         Shipment.manager,
@@ -1468,5 +1494,5 @@ def create_tables():
 
 # --- Запуск ---
 if __name__ == '__main__':
-    create_tables()
+    #create_tables()
     app.run(debug=True, port=5000)

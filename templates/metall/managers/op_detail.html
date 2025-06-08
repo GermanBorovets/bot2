@@ -1,18 +1,15 @@
 {% extends 'base.html' %}
 
-{% block title %}Категория {{ allcateg.naming }}{% endblock %}
-
-{% block categ %}
+{% block content %}
 
 <div class="d-flex justify-content-between align-items-center mb-5 mx-auto" style="width: 20rem; text-align: center;">
-    <a href="/categories/" class="link-secondary link-underline link-underline-opacity-0 p-3 border-2">
+    <a href="/managers/{{ ManBalance.manager_id }}" class="link-secondary link-underline link-underline-opacity-0 p-3 border-2">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-arrow-left"
             viewBox="0 0 16 16">
             <path fill-rule="evenodd"
                 d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8" />
         </svg>
     </a>
-
     <a class="link-primary link-underline link-underline-opacity-0 p-3 border-2" data-bs-toggle="modal"
         data-bs-target="#redModal">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-pencil-square"
@@ -31,10 +28,15 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
+                    <p>{{ ManBalance.payment_type}} от {{ moment(ManBalance.date).format('D.MM.YYYY в HH:mm') }}</p>
                     <form method="post">
                         <div class="mb-3">
-                            <input value="{{ allcateg.naming }}" type="text" name="name" id="name" class="form-control"
-                                placeholder="Название">
+                            <input value="{{ ManBalance.amount }}" type="number" step="0.01" name="summ_mb" id="summ_up"
+                                class="form-control" placeholder="Сумма">
+                        </div>
+                        <div class="mb-3">
+                            <input value="{{ ManBalance.comment }}" type="text" name="comment_mb" id="comment_mb"
+                                class="form-control" placeholder="Комментарий">
                         </div>
                         <button type="submit" class="btn btn-primary">Сохранить</button>
                     </form>
@@ -45,8 +47,13 @@
 
 </div>
 <div class="card mx-auto mt-1 p-0" style="width: 20rem; text-align: center;">
+    <div class="card-header">
+        {{ moment(ManBalance.date).format('DD.MM.YYYY HH:mm') }}
+    </div>
     <div class="card-body">
-        <h4 class="card-title">{{ allcateg.naming }}</h4>
+        <h5 class="card-title text-secondary">{{ ManBalance.payment_type }}</h5>
+        <h2 class="card-title format-number">{{ ManBalance.amount }}</h2>
+        <p class="card-text">{{ ManBalance.comment }}</p>
     </div>
     <div class="card-footer bg-transparent text-danger border p-0 rounded-bottom">
         <a class="# link-danger d-flex btn justify-content-center rounded-bottom" data-bs-toggle="modal"
@@ -60,48 +67,23 @@
             </svg>
         </a>
     </div>
+
     <div class="modal fade" id="delModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h1 class="modal-title fs-5" id="exampleModalLabel">Удалить категорию</h1>
+                    <h1 class="modal-title fs-5" id="exampleModalLabel">Удалить запись</h1>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Отмена</button>
-                    <a href="/categ/{{ allcateg.id }}/del" type="button" class="btn btn-danger">Удалить</a>
+                    <a href="/op_detail/{{ ManBalance.id }}/del" type="button" class="btn btn-danger">Удалить</a>
                 </div>
             </div>
         </div>
     </div>
 </div>
-<div class="card mx-auto mb-5" style="max-width: 30rem; border: none;">
-    <div class="card-body">
-        <div class="list-group">
-            {% if allopp|length > 0 %}
-            {% for op in allopp %}
-            {% if op.categ_id == allcateg.naming: %}
-            <a href="/oper/{{ op.id }}" class="list-group-item list-group-item-action">
-                <span class="badge text-bg-secondary">{{ op.check_name }}</span>
-                <small>{{ moment(op.date).format('DD.MM.YYYY HH:mm') }}</small>
-                <div class="d-flex justify-content-between">
-                    <h5>{{ op.categ_id }}</h5>
-                    <h5>{{ op.summa / 100 }}₽</h5>
-                </div>
-                {{ op.comment }}
-            </a>
-            {% endif %}
-            {% endfor %}
-            {% else %}
-            <div class="d-flex align-items-center, justify-content-center">
-                <p class="align-items-center">
-                    Транзакций пока нет
-                </p>
-            </div>
-            {% endif %}
-        </div>
 
-    </div>
-    <div class="mb-5"></div>
-</div>
+
+
 {% endblock %}

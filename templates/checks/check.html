@@ -5,16 +5,6 @@
 {% block checks%}
 
 <div class="card mx-auto mb-5" style="max-width: 30rem; border: none;">
-    {% with messages = get_flashed_messages() %}
-    {% if messages %}
-    {% for message in messages %}
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        {{ message }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-    {% endfor %}
-    {% endif %}
-    {% endwith %}
     <div class="card-body mb-5">
         <div class="mb-2 d-flex justify-content-between">
             <a href="/" class="link-secondary link-underline-opacity-0">
@@ -57,7 +47,7 @@
         </div>
         <h5 class="mb-3" style="text-align: center;">Транзакции</h5>
         <h3 class="mb-3 text-secondary" style="text-align: center;">{{ allcheck.title }}</h3>
-        <h1 class="mb-3" style="text-align: center;">{{ allcheck.summ / 100 }}₽</h1>
+        <h1 class="mb-3 format-number" style="text-align: center;">{{ allcheck.summ / 100 }}</h1>
         <div class="d-flex justify-content-evenly">
             <a class="mb-3 btn btn-outline-primary border-2 rounded-circle p-2" data-bs-toggle="modal"
                 data-bs-target="#addModal">
@@ -108,7 +98,7 @@
                 <small>{{ moment(op.date).format('DD.MM.YYYY HH:mm') }}</small>
                 <div class="d-flex justify-content-between">
                     <h5>{{ op.categ_id }}</h5>
-                    <h5>{{ op.summa / 100 }}₽</h5>
+                    <h5 class="format-number">{{ op.summa / 100 }}</h5>
                 </div>
                 {{ op.comment }}
             </a>
@@ -124,5 +114,6 @@
         </div>
     </div>
 </div>
+
 
 {% endblock %}

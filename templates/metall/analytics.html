@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center p-2">
+    <a href="/metall" class="btn btn-outline-secondary">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-arrow-left"
+            viewBox="0 0 16 16">
+            <path fill-rule="evenodd"
+                d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8" />
+        </svg>
+        Назад
+    </a>
+</div>
+<div class="d-flex justify-content-between align-items-center m-2 p-3">
+    <h2>Аналитика и отчеты</h2>
+</div>
+
+<div class="row p-3">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                Средние показатели
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card text-white bg-primary mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title">Средний чек</h5>
+                                <p class="card-text h4">{{ avg_values.client_payment|format_number }} руб.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card text-white bg-success mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title">Средняя дельта</h5>
+                                <p class="card-text h4">{{ avg_values.delta|format_number }} руб.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                Статистика по менеджерам
+            </div>
+            <div class="card-body">
+                {% for stat in manager_stats %}
+                <div class="col mb-2 border rounded p-2">
+                    <div class="col-md-4">
+                        <strong>
+                            <h3>{{ stat.manager }}</h3>
+                        </strong>
+                    </div>
+                    <div class="col-md-4">
+                        Общая дельта:
+                        <strong>
+                            <p class="text-success">{{ stat.total_delta|format_number }}₽</p>
+                        </strong>
+                        Средняя дельта:
+                        <strong>
+                            <p class="text-primary">{{ stat.avg_delta|format_number }}₽</p>
+                        </strong>
+                        <strong>Кол-во отгрузок: </strong> {{ stat.shipment_count }}
+                    </div>
+                </div>
+                {% else %}
+                <div class="col">
+                    <div class="col-md-4">
+                        Нет данных
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row p-3 mb-5">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                Производительность менеджеров
+            </div>
+            <div class="card-body">
+                <canvas id="managerPerformanceChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mb-5">
+    .
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+
+        // Производительность менеджеров
+        fetch('/analytics/chart/manager_performance')
+            .then(response => response.json())
+            .then(data => {
+                const ctx = document.getElementById('managerPerformanceChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: data.managers,
+                        datasets: [{
+                            label: 'Общая дельта (руб.)',
+                            data: data.deltas,
+                            backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        indexAxis: 'y',
+                        responsive: true,
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function (value) {
+                                        return value.toLocaleString('ru-RU') + '₽';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+    });
+</script>
+{% endblock %}

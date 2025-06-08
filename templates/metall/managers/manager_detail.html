@@ -1,0 +1,340 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center p-2">
+    <a href="/managers" class="btn btn-outline-secondary">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-arrow-left"
+            viewBox="0 0 16 16">
+            <path fill-rule="evenodd"
+                d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8" />
+        </svg>
+        Назад
+    </a>
+    <a href="{{ url_for('edit_manager', id=manager.id) }}" class="btn btn-outline-primary">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-pencil-square"
+            viewBox="0 0 16 16">
+            <path
+                d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z" />
+            <path fill-rule="evenodd"
+                d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z" />
+        </svg>
+        Редактировать
+    </a>
+    <div class="d-flex justify-content-between align-items-center p-2">
+        <div>
+            <!-- Кнопка удаления -->
+            <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-trash"
+                    viewBox="0 0 16 16">
+                    <path
+                        d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z" />
+                    <path
+                        d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z" />
+                </svg>
+                Удалить
+            </button>
+        </div>
+    </div>
+
+    <!-- Модальное окно подтверждения удаления -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteModalLabel">Удаление менеджера</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Вы уверены, что хотите удалить менеджера "{{ manager.name }}"?
+                    <br><strong>Все его операции по балансу будут удалены, но отгрузки останутся.</strong>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <form action="{{ url_for('delete_manager', id=manager.id) }}" method="post">
+                        <button type="submit" class="btn btn-danger">Удалить</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="container mt-4 mb-5">
+    <h2>{{ manager.name }}</h2>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Информация</h5>
+            <p>Процент: {{ (manager.percent * 100)|round(2) }}%</p>
+            <p>
+                Баланс менеджера: <strong class="format-number {{ manager.salary | delta_class }}">{{ manager.salary
+                    }}</strong>
+            </p>
+            <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#payModal">
+                - Выдать
+            </button>
+            <button class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#addModal">
+                + Начислить
+            </button>
+            <button class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#fineModal">
+                Штраф
+            </button>
+        </div>
+    </div>
+
+    <div class="modal fade" id="payModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="exampleModalLabel">Выплата менеджеру {{ manager.name }}</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form action="{{ url_for('pay_manager', manager_id=manager.id) }}" method="post">
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label for="amount{{ manager.id }}">Сумма выплаты (с минусом)</label>
+                                <input type="number" step="0.01" class="form-control" id="amount{{ manager.id }}"
+                                    name="amount" required placeholder="Сумма, например: -5000р">
+                            </div>
+                            <div class="form-group">
+                                <label for="payment_type{{ manager.id }}">Тип выплаты</label>
+                                <select class="form-control" id="payment_type{{ manager.id }}" name="payment_type"
+                                    required>
+                                    <option value="Зарплата">Зарплата</option>
+                                    <option value="Аванс">Аванс</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="check_id{{ manager.id }}">Счет списания</label>
+                                <select class="form-control" id="check_id{{ manager.id }}" name="check_id" required>
+                                    {% for check in allchecks %}
+                                    <option value="{{ check.id }}">{{ check.title }} ({{ check.summ | rub }} руб.)
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-primary">Выплатить</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="addModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="exampleModalLabel">Начисление менеджеру {{ manager.name }}</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form action="{{ url_for('add_manager', manager_add_id=manager.id) }}" method="post">
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label>Сумма начисления</label>
+                                <input type="number" step="0.01" class="form-control" name="add_amount" required
+                                    placeholder="Сумма, например: 5000р">
+                            </div>
+                            <div class="form-group">
+                                <label>Комментарий</label>
+                                <input type="text" class="form-control" name="add_comment" required
+                                    placeholder="Комментарий">
+                            </div>
+                            <div class="form-group">
+                                <label>Тип начисления</label>
+                                <select class="form-control" name="add_type" required>
+                                    <option value="Оклад">Оклад</option>
+                                    <option value="Премия">Премия</option>
+                                    <option value="Другое">Другое</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-success">Начислить</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="fineModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="exampleModalLabel">Штраф менеджеру {{ manager.name }}</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form action="{{ url_for('fine_manager', manager_fine_id=manager.id) }}" method="post">
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label for="fine{{ manager.id }}">Сумма Штрафа (с минусом)</label>
+                                <input type="number" step="0.01" class="form-control" id="fine{{ manager.id }}"
+                                    name="fine_summ" required placeholder="Сумма, например: -5000р">
+                            </div>
+                            <div class="form-group">
+                                <label for="fine_comm{{ manager.id }}">Комментарий</label>
+                                <input type="text" class="form-control" id="fine_comm{{ manager.id }}"
+                                    name="fine_comment" required placeholder="Например: опоздание">
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="submit" class="btn btn-danger">Назначить</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <p class="m-2">Отобразить результаты менеджера:</p>
+    <div class="d-flex flex-wrap gap-2 mb-3 m-2">
+        <a href="?period=all"
+            class="btn btn-sm btn-outline-{{ 'primary' if current_period == 'all' else 'secondary' }}">
+            За все время
+        </a>
+        <a href="?period=week"
+            class="btn btn-sm btn-outline-{{ 'primary' if current_period == 'week' else 'secondary' }}">
+            Эта неделя
+        </a>
+        <a href="?period=month"
+            class="btn btn-sm btn-outline-{{ 'primary' if current_period == 'month' else 'secondary' }}">
+            Этот месяц
+        </a>
+        <a href="" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#datePeriod">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-calendar3"
+                viewBox="0 0 16 16">
+                <path
+                    d="M14 0H2a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2M1 3.857C1 3.384 1.448 3 2 3h12c.552 0 1 .384 1 .857v10.286c0 .473-.448.857-1 .857H2c-.552 0-1-.384-1-.857z" />
+                <path
+                    d="M6.5 7a1 1 0 1 0 0-2 1 1 0 0 0 0 2m3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2m3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2m-9 3a1 1 0 1 0 0-2 1 1 0 0 0 0 2m3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2m3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2m3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2m-9 3a1 1 0 1 0 0-2 1 1 0 0 0 0 2m3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2m3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2" />
+            </svg>
+            Выбрать период
+        </a>
+
+        <div class="modal fade" id="datePeriod" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="exampleModalLabel">Выберите период</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form class="col g-2 align-items-center" method="GET"
+                            action="{{ url_for('manager_detail', id=manager.id) }}">
+                            <input type="hidden" name="period" value="custom">
+                            <div class="col-auto m-1">
+                                с
+                                <input type="date" class="form-control form-control-sm" name="start_date"
+                                    value="{{ start_date or '' }}">
+                            </div>
+                            <div class="col-auto m-1">
+                                до
+                                <input type="date" class="form-control form-control-sm" name="end_date"
+                                    value="{{ end_date or '' }}">
+                            </div>
+                            <div class="col-auto m-1">
+                                <button type="submit" class="btn btn-sm btn-primary">Применить</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <div class="m-2">
+        <a href="{{ url_for('export_manager_operations', id=manager.id, period=current_period, start_date=start_date, end_date=end_date) }}"
+            class="btn btn-success">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                class="bi bi-filetype-xlsx" viewBox="0 0 16 16">
+                <path fill-rule="evenodd"
+                    d="M14 4.5V11h-1V4.5h-2A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v9H2V2a2 2 0 0 1 2-2h5.5zM7.86 14.841a1.13 1.13 0 0 0 .401.823q.195.162.479.252.284.091.665.091.507 0 .858-.158.355-.158.54-.44a1.17 1.17 0 0 0 .187-.656q0-.336-.135-.56a1 1 0 0 0-.375-.357 2 2 0 0 0-.565-.21l-.621-.144a1 1 0 0 1-.405-.176.37.37 0 0 1-.143-.299q0-.234.184-.384.188-.152.513-.152.214 0 .37.068a.6.6 0 0 1 .245.181.56.56 0 0 1 .12.258h.75a1.1 1.1 0 0 0-.199-.566 1.2 1.2 0 0 0-.5-.41 1.8 1.8 0 0 0-.78-.152q-.44 0-.777.15-.336.149-.527.421-.19.273-.19.639 0 .302.123.524t.351.367q.229.143.54.213l.618.144q.31.073.462.193a.39.39 0 0 1 .153.326.5.5 0 0 1-.085.29.56.56 0 0 1-.255.193q-.168.07-.413.07-.176 0-.32-.04a.8.8 0 0 1-.249-.115.58.58 0 0 1-.255-.384zm-3.726-2.909h.893l-1.274 2.007 1.254 1.992h-.908l-.85-1.415h-.035l-.853 1.415H1.5l1.24-2.016-1.228-1.983h.931l.832 1.438h.036zm1.923 3.325h1.697v.674H5.266v-3.999h.791zm7.636-3.325h.893l-1.274 2.007 1.254 1.992h-.908l-.85-1.415h-.035l-.853 1.415h-.861l1.24-2.016-1.228-1.983h.931l.832 1.438h.036z" />
+            </svg>
+            Скачать операции
+        </a>
+    </div>
+
+    <ul class="nav nav-pills m-2" id="managerTabs" role="tablist">
+        <li class="nav-item">
+            <button class="nav-link active" id="stats-tab" data-bs-toggle="tab" data-bs-target="#stats-tab-pane"
+                type="button" role="tab" aria-controls="stats-tab-pane" aria-selected="true">Зарплата</a>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" id="shipments-tab" data-bs-toggle="tab" data-bs-target="#shipments-tab-pane"
+                type="button" role="tab" aria-controls="shipments-tab-pane" aria-selected="false">Отгрузки</a>
+        </li>
+    </ul>
+
+    <div class="tab-content mt-3" id="managerTabsContent">
+        <!-- Вкладка операций -->
+        <div class="tab-pane fade show active" id="stats-tab-pane" role="tabpanel" aria-labelledby="stats-tab"
+            tabindex="0">
+            <h4 class="m-2">Операции</h4>
+            <div class="d-flex align-items-center m-2 text-secondary">
+                <h4 class="me-2">Баланс за период:</h4>
+                <h4 class="format-number fw-bold {{ period_balance | delta_class }} mb-0">
+                    {{ period_balance }}
+                </h4>
+            </div>
+            <div class="list-group m-2 mb-5">
+                {% for manbalance in allManageBalance %}
+                <a href="{{ url_for('op_detail', id=manbalance.id) }}" class="list-group-item list-group-item-action">
+                    <small>{{ manbalance.date.strftime('%d.%m.%Y') }}</small>
+                    <div class="d-flex justify-content-between">
+                        <h5>{{ manbalance.payment_type }}</h5>
+                        <h5 class="format-number fw-bold {{ manbalance.amount | delta_class }}">{{ manbalance.amount }}
+                        </h5>
+                    </div>
+                    {{ manbalance.comment }}
+                </a>
+                {% else %}
+                <div class="d-flex align-items-center, justify-content-center">
+                    <p class="align-items-center">
+                        Операций пока нет
+                    </p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Вкладка отгрузок -->
+        <div class="tab-pane fade" id="shipments-tab-pane" role="tabpanel" aria-labelledby="shipments-tab" tabindex="0">
+            <h4 class="m-2">Отгрузки</h4>
+            <div class="d-flex align-items-center m-2 text-secondary">
+                <h4 class="me-2">Дельта за период:</h4>
+                <h4 class="format-number fw-bold {{ period_shipments_sum | delta_class }} mb-0">
+                    {{ period_shipments_sum }}
+                </h4>
+            </div>
+            <div class="list-group m-2 mb-5">
+                {% for shipment in shipments %}
+                <a href="{{ url_for('shipment_detail', id=shipment.id) }}"
+                    class="list-group-item list-group-item-action">
+                    <span class="badge text-bg-secondary">iD: {{ shipment.deal_id }}</span>
+                    <small>{{ shipment.date.strftime('%d.%m.%Y') }}</small>
+                    <div class="d-flex justify-content-between">
+                        <h5>Менеджер: {{ shipment.manager }}</h5>
+                        <h5 class="format-number fw-bold {{ shipment.delta | delta_class }}">{{ shipment.delta }}</h5>
+                    </div>
+                    Клиент: {{ shipment.client_name }} ({{ shipment.client_phone }})
+                </a>
+                {% else %}
+                <div class="d-flex align-items-center, justify-content-center">
+                    <p class="align-items-center">
+                        Отгрузок пока нет
+                    </p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+<div class="mb-5">
+    -
+</div>
+{% endblock %}

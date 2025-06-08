@@ -1,11 +1,11 @@
 {% extends 'base.html' %}
 
-{% block title %}Операция {{ allopp.title }}{% endblock %}
+{% block title %}Долг {{ alldebt.debt }}{% endblock %}
 
-{% block operation %}
+{% block debt %}
 
-<div class="d-flex justify-content-between align-items-center mb-5 mx-auto" style="width: 20rem; text-align: center;">
-    <a href="/checks/{{ allopp.check_id }}" class="link-secondary link-underline link-underline-opacity-0 p-3 border-2">
+<div class="d-flex justify-content-between align-items-center mx-auto" style="width: 20rem; text-align: center;">
+    <a href="/debts" class="link-secondary link-underline link-underline-opacity-0 p-3 border-2">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-arrow-left"
             viewBox="0 0 16 16">
             <path fill-rule="evenodd"
@@ -31,22 +31,15 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <p>{{ checkelem.title }} от {{ moment(allopp.date).format('D.MM.YYYY в HH:mm') }}</p>
                     <form method="post">
                         <div class="mb-3">
-                            <input value="{{ allopp.summa / 100 }}" type="number" step="0.01" name="summ_up" id="summ_up"
-                                class="form-control" placeholder="Сумма">
+                            <input value="{{ alldebt.debt }}" type="text" name="debtname" id="debtname" class="form-control"
+                                placeholder="Имя">
                         </div>
                         <div class="mb-3">
-                            <input value="{{ allopp.comment }}" type="text" name="comment_up" id="comment_up"
-                                class="form-control" placeholder="Комментарий">
+                            <input value="{{ alldebt.summ/100 }}" type="number" step="0.01" name="debtsumm" id="debtsumm" class="form-control"
+                                placeholder="Сумма">
                         </div>
-                        <select class="form-select mb-2" id="categories" name="categories">
-                            {% for cat in allcateg %}
-                            <option selected>{{ cat.naming }}</option>
-                            {% endfor %}
-                            <option>Без категории</option>
-                        </select>
                         <button type="submit" class="btn btn-primary">Сохранить</button>
                     </form>
                 </div>
@@ -56,14 +49,9 @@
 
 </div>
 <div class="card mx-auto mt-1 p-0" style="width: 20rem; text-align: center;">
-    <div class="card-header">
-        {{ moment(allopp.date).format('DD.MM.YYYY HH:mm') }}
-    </div>
     <div class="card-body">
-        <h5 class="card-title text-secondary">{{ allopp.categ_id }}</h5>
-        <h2 class="card-title">{{ allopp.summa / 100 }}₽</h2>
-        <span class="badge text-bg-secondary">{{ allopp.check_name }}</span>
-        <p class="card-text">{{ allopp.comment }}</p>
+        <h3 class="card-title text-secondary">{{ alldebt.debt }}</h3>
+        <h1 class="card-title format-number">{{ alldebt.summ/100 }}</h1>
     </div>
     <div class="card-footer bg-transparent text-danger border p-0 rounded-bottom">
         <a class="# link-danger d-flex btn justify-content-center rounded-bottom" data-bs-toggle="modal"
@@ -77,24 +65,19 @@
             </svg>
         </a>
     </div>
-
     <div class="modal fade" id="delModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h1 class="modal-title fs-5" id="exampleModalLabel">Удалить запись</h1>
+                    <h1 class="modal-title fs-5" id="exampleModalLabel">Удалить долг</h1>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Отмена</button>
-                    <a href="/oper/{{ allopp.id }}/del" type="button" class="btn btn-danger">Удалить</a>
+                    <a href="/debt/{{ alldebt.id }}/del" type="button" class="btn btn-danger">Удалить</a>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-
-
-
 {% endblock %}

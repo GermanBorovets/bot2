@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Редактирование отдела</h2>
+    <form method="POST">
+        <div class="mb-3">
+            <label>Название отдела</label>
+            <input type="text" name="name" class="form-control" value="{{ department.name }}" required>
+        </div>
+        {% if department.name != 'Менеджеры без отдела' %}
+        <div class="mb-3">
+            <input type="number" placeholder="Недельная цель" value="{{department.weekly_goal}}" name="weekly_goal" class="form-control" step="0.1" min="0"
+                required>
+        </div>
+        {% endif %}
+        <div class="mb-3">
+            <input type="number" placeholder="Процент РОПа с продаж менеджеров" value="{{department.rop_percent*100}}" name="rop_percent" class="form-control" step="0.1" min="0"
+                required>
+        </div>
+        <button type="submit" class="btn btn-primary">Сохранить</button>
+        <a href="{{ url_for('department_detail', id=department.id) }}" class="btn btn-secondary">Отмена</a>
+    </form>
+</div>
+{% endblock %}

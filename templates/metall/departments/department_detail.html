@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+
+
+<div class="d-flex justify-content-between align-items-center p-2">
+    <a href="/metall" class="btn btn-outline-secondary">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-arrow-left"
+            viewBox="0 0 16 16">
+            <path fill-rule="evenodd"
+                d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8" />
+        </svg>
+        Назад
+    </a>
+
+    <a href="{{ url_for('edit_department', id=department.id) }}" class="btn btn-outline-primary">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-pencil-square"
+            viewBox="0 0 16 16">
+            <path
+                d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z" />
+            <path fill-rule="evenodd"
+                d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z" />
+        </svg>
+        Редактировать
+    </a>
+
+</div>
+<div class="row card-group row-cols-1 row-cols-md-1 g-4">
+    <div class="d-flex align-items-center, justify-content-center mb-0">
+        <h2 class="align-items-center">
+            {{ department.name }}
+        </h2>
+    </div>
+    {% if department.name != 'Менеджеры без отдела' %}
+    <div class="d-flex align-items-center, justify-content-center">
+        <h4 class="align-items-center text-secondary">
+            Цель
+        </h4>
+    </div>
+    <div class="d-flex align-items-center, justify-content-center mt-0">
+        <h1 class="align-items-center format-number text-primary">
+            {{ department.weekly_goal }}
+        </h1>
+    </div>
+    {% endif %}
+
+    {% for manager in managers %}
+    {% if manager.role == 'РОП' %}
+    <a class="col" type="button" href="{{ url_for('manager_detail', id=manager.id) }}" style="text-decoration: none;">
+        <div class="card border-info mx-auto" style="max-width: 20rem;">
+            <div class="card-header bg-info">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-person"
+                    viewBox="0 0 16 16">
+                    <path
+                        d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6m2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0m4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4m-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10s-3.516.68-4.168 1.332c-.678.678-.83 1.418-.832 1.664z" />
+                </svg>
+            </div>
+            <div class="card-body">
+                <div class="d-flex">
+                    <h2>{{ manager.name }}</h2>
+                </div>
+                <div>
+                    <h5 class=" text-secondary">{{ manager.role }}</h5>
+                </div>
+            </div>
+        </div>
+    </a>
+    {% endif %}
+    {% endfor %}
+    {% for manager in managers %}
+    {% if manager.role != 'РОП' %}
+    <a class="col" type="button" href="{{ url_for('manager_detail', id=manager.id) }}" style="text-decoration: none;">
+        <div class="card mx-auto" style="max-width: 20rem;">
+            <div class="card-header">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-person"
+                    viewBox="0 0 16 16">
+                    <path
+                        d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6m2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0m4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4m-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10s-3.516.68-4.168 1.332c-.678.678-.83 1.418-.832 1.664z" />
+                </svg>
+            </div>
+            <div class="card-body">
+                <div class="d-flex">
+                    <h2>{{ manager.name }}</h2>
+                </div>
+                <div>
+                    <h5 class="text-secondary">{{ manager.role }}</h5>
+                </div>
+            </div>
+        </div>
+    </a>
+    {% endif %}
+    {% endfor %}
+    <div class="col">
+        <div type="button" data-bs-toggle="modal" data-bs-target="#addcatModal" class="card mx-auto"
+            style="max-width: 20rem; border: 2px dashed #0d6efd;">
+            <div class="card-body d-flex align-items-center justify-content-center" style="height: 3rem;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="#0d6efd" class="bi bi-plus-lg"
+                    viewBox="0 0 16 16">
+                    <path fill-rule="evenodd"
+                        d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2" />
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="addcatModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="addcatModalLabel">Добавить менеджера</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="post">
+                        <div class="mb-3">
+                            <input placeholder="Имя" type="text" name="name" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <input type="number" placeholder="Процент(число, например: 15)" name="percent"
+                                class="form-control" step="0.1" min="0" max="100" required>
+                        </div>
+                        <div class="mb-3">
+                            <select name="role" class="form-select" required>
+                                <option>Менеджер</option>
+                                <option>РОП</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <input type="number" placeholder="Недельная цель" name="goal" class="form-control"
+                                step="0.1" min="0" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Добавить менеджера</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="mb-5">
+        .
+    </div>
+
+</div>
+
+
+
+{% endblock %}

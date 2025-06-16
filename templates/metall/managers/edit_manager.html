@@ -6,16 +6,31 @@
     <form method="POST">
         <div class="mb-3">
             <label>Имя менеджера</label>
-            <input type="text" name="name" class="form-control" 
-                   value="{{ manager.name }}" required>
+            <input type="text" name="name" class="form-control" value="{{ manager.name }}" required>
         </div>
         <div class="mb-3">
             <label>Процент от дельты (%)</label>
-            <input type="number" step="0.01" name="percent" 
-                   class="form-control" value="{{ percent_display }}" required>
+            <input type="number" step="0.01" name="percent" class="form-control" value="{{ percent_display }}" required>
+        </div>
+        <div class="mb-3">
+            <input type="number" placeholder="Недельная цель" value="{{manager.goal}}" name="goal" class="form-control" step="0.1" min="0"
+                required>
+        </div>
+        <div class="mb-3">
+            <select name="role" class="form-select" required>
+                <option>Менеджер</option>
+                <option>РОП</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <select name="department_id" class="form-select" required>
+                {% for department in departments %}
+                    <option value="{{department.id}}">{{department.name}}</option>
+                {% endfor %}
+            </select>
         </div>
         <button type="submit" class="btn btn-primary">Сохранить</button>
-        <a href="{{ url_for('managers') }}" class="btn btn-secondary">Отмена</a>
+        <a href="{{ url_for('manager_detail', id=manager.id) }}" class="btn btn-secondary">Отмена</a>
     </form>
 </div>
 {% endblock %}

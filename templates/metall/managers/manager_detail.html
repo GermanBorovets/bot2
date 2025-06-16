@@ -2,7 +2,10 @@
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center p-2">
-    <a href="/managers" class="btn btn-outline-secondary">
+
+
+
+    <a href="{{ url_for('department_detail', id=manager.department_id) }}" class="btn btn-outline-secondary">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-arrow-left"
             viewBox="0 0 16 16">
             <path fill-rule="evenodd"
@@ -10,6 +13,9 @@
         </svg>
         Назад
     </a>
+
+
+
     <a href="{{ url_for('edit_manager', id=manager.id) }}" class="btn btn-outline-primary">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-pencil-square"
             viewBox="0 0 16 16">
@@ -20,6 +26,9 @@
         </svg>
         Редактировать
     </a>
+
+
+
     <div class="d-flex justify-content-between align-items-center p-2">
         <div>
             <!-- Кнопка удаления -->
@@ -35,6 +44,8 @@
             </button>
         </div>
     </div>
+
+
 
     <!-- Модальное окно подтверждения удаления -->
     <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
@@ -58,17 +69,28 @@
         </div>
     </div>
 </div>
+
+
+
+
+
 <div class="container mt-4 mb-5">
     <h2>{{ manager.name }}</h2>
 
     <div class="card mb-4">
         <div class="card-body">
             <h5 class="card-title">Информация</h5>
-            <p>Процент: {{ (manager.percent * 100)|round(2) }}%</p>
-            <p>
-                Баланс менеджера: <strong class="format-number {{ manager.salary | delta_class }}">{{ manager.salary
+            <p>Процент: <strong>{{ (manager.percent * 100)|round(2) }}%</strong></p>
+            <p>Цель: <strong class="format-number">{{manager.goal}}</strong></p>
+            <p>Отдел: <strong>{{department.name}}</strong></p>
+            <p>Должность: <strong>{{manager.role}}</strong></p>
+            {% if manager.role == 'РОП' %}
+            <p>Процент от продаж менеджеров: <strong>{{department.rop_percent * 100}}%</strong></p>
+            {% endif %}
+            <h5 class="mb-3 text-secondary">
+                Баланс менеджера: <strong class="format-number {{ balance | delta_class }}">{{ balance 
                     }}</strong>
-            </p>
+            </h5>
             <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#payModal">
                 - Выдать
             </button>
@@ -80,6 +102,8 @@
             </button>
         </div>
     </div>
+
+
 
     <div class="modal fade" id="payModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog">
@@ -191,6 +215,8 @@
         </div>
     </div>
 
+
+
     <p class="m-2">Отобразить результаты менеджера:</p>
     <div class="d-flex flex-wrap gap-2 mb-3 m-2">
         <a href="?period=all"
@@ -247,6 +273,8 @@
         </div>
 
     </div>
+
+
     <div class="m-2">
         <a href="{{ url_for('export_manager_operations', id=manager.id, period=current_period, start_date=start_date, end_date=end_date) }}"
             class="btn btn-success">
@@ -258,6 +286,7 @@
             Скачать операции
         </a>
     </div>
+
 
     <ul class="nav nav-pills m-2" id="managerTabs" role="tablist">
         <li class="nav-item">
@@ -334,6 +363,12 @@
         </div>
     </div>
 </div>
+
+
+
+
+
+
 <div class="mb-5">
     -
 </div>

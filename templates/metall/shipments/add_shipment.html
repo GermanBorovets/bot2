@@ -115,10 +115,18 @@
                 <label class="form-label">Расходы(бн-нал)</label>
                 <input type="number" step="0.01" name="other_expenses" class="form-control" required>
             </div>
+
             <div class="mb-3">
                 <label class="form-label">Имя экспедитора</label>
-                <input type="text" name="forwarder_name" class="form-control" required>
+                <select name="forwarder_name" class="form-select" required>
+                    <option value="Без экспедитора">Без экспедитора</option>
+                    {% for manager in managers %}
+                    <option value="{{ manager }}">{{ manager }}</option>
+                    {% endfor %}
+                    <option>Другой экспедитор</option>
+                </select>
             </div>
+
             <div class="mb-3">
                 <label class="form-label">УПД Доставка(ссылка)</label>
                 <input type="text" name="upd_logistic" class="form-control" required>

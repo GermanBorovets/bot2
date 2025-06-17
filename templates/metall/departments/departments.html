@@ -38,10 +38,12 @@
                 <div class="d-flex">
                     <h2>{{ department.name }}</h2>
                 </div>
+                {% if department.name != 'ОП Володя' %}
                 <div>
                     <h5 class="text-secondary">Недельная цель</h5>
                     <h4 class="format-number">{{ department.weekly_goal }}</h4>
                 </div>
+                {% endif %}
             </div>
         </div>
     </a>

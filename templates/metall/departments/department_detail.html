@@ -33,6 +33,7 @@
         </h2>
     </div>
     {% if department.name != 'Менеджеры без отдела' %}
+    {% if department.name != 'ОП Володя' %}
     <div class="d-flex align-items-center, justify-content-center">
         <h4 class="align-items-center text-secondary">
             Цель
@@ -43,6 +44,7 @@
             {{ department.weekly_goal }}
         </h1>
     </div>
+    {% endif %}
     {% endif %}
 
     {% for manager in managers %}

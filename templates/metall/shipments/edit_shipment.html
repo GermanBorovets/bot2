@@ -114,8 +114,13 @@
             </div>
             <div class="mb-3">
                 <label class="form-label">Имя экспедитора</label>
-                <input type="text" name="forwarder_name" class="form-control" value="{{ shipment.forwarder_name }}"
-                    required>
+                <select name="forwarder_name" class="form-select" required>
+                    <option value="Без экспедитора">Без экспедитора</option>
+                    {% for manager in managers %}
+                    <option value="{{ manager }}">{{ manager }}</option>
+                    {% endfor %}
+                    <option>Другой экспедитор</option>
+                </select>
             </div>
         </div>
     </div>

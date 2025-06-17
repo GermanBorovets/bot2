@@ -165,7 +165,6 @@ class IsPaidDepartmentBonus(db.Model):
     isPaid = db.Column(db.Boolean, default=False)
 
 
-
 # --- Функции -----------------------------------------------------------------------------------
 def rub_to_kop(rub_str):
     """Конвертирует строку с рублями (1.23) в копейки (123)"""
@@ -1286,23 +1285,40 @@ def add_shipment():
             shipment_id=new_shipment.id
         )
 
+        forward = Manager.query.filter_by(name=new_shipment.forwarder_name).first()
 
-        rop = Manager.query.filter_by(role='РОП', department_id=manager.department_id).first()
-        department = Department.query.filter_by(id=manager.department_id).first()
-        if rop:
-            if manager.role == 'Менеджер':
-                addbalancerop = ManagerBalance(
-                    manager_id = rop.id,
-                    amount = new_shipment.delta*department.rop_percent,
-                    comment = f"Отгрузка. ID: {new_shipment.deal_id}",
-                    payment_type=f'Отгрузка менеджер {manager.name}',
-                    date=new_shipment.date,
-                    shipment_id=new_shipment.id
-                )
-                db.session.add(addbalancerop)
+        if forward:
+            addforward = ManagerBalance(
+                manager_id=forward.id,
+                amount=new_shipment.forwarder_payment,
+                comment=f"Экспедиторские, отгрузка:. ID: {new_shipment.deal_id}",
+                payment_type='Экспедиторские',
+                date=new_shipment.date,
+                shipment_id=new_shipment.id
+            )
+            db.session.add(addforward)
+
+
+
+
 
         db.session.add(addbalance)
         db.session.flush()
+
+        rop = Manager.query.filter_by(role='РОП', department_id=manager.department_id).first()
+        department = Department.query.filter_by(id=manager.department_id).first()
+        if department.rop_percent > 0:
+            if rop:
+                if manager.role == 'Менеджер':
+                    addbalancerop = ManagerBalance(
+                        manager_id = rop.id,
+                        amount = new_shipment.delta*department.rop_percent,
+                        comment = f"Отгрузка. ID: {new_shipment.deal_id}",
+                        payment_type=f'Отгрузка менеджер {manager.name}',
+                        date=new_shipment.date,
+                        shipment_id=new_shipment.id
+                    )
+                    db.session.add(addbalancerop)
 
 
         #если выполнена цель менеджера, то выплачиваем менеджеру
@@ -1322,7 +1338,12 @@ def add_shipment():
             isPaidManager = IsPaidManagerBonus.query.filter_by(manager_name=manager.name,
                                                                start_week=start_of_week).first()
             if isPaidManager and isPaidManager.isPaid:
-                pass
+                bonus = ManagerBalance.query.get(isPaidManager.id_man_bonus)
+                bonus.amount = (period_shipments_sum*0.05)
+                if department.rop_percent > 0:
+                    RBalance = ManagerBalance.query.filter_by(shipment_id=new_shipment.id, payment_type=f'Отгрузка менеджер {manager.name}').first()
+                    if RBalance:
+                        RBalance.amount = period_shipments_sum*0.015
             else:
                 addbonusbalance = ManagerBalance(
                     manager_id=manager.id,
@@ -1341,6 +1362,19 @@ def add_shipment():
                     id_man_bonus=addbonusbalance.id
                 )
                 db.session.add(isPaid)
+
+                if department.rop_percent > 0:
+                    if rop:
+                        if manager.role == 'Менеджер':
+                            addbalancerop = ManagerBalance(
+                                manager_id = rop.id,
+                                amount = period_shipments_sum*0.015,
+                                comment = f"Бонус за закрытую цель отдела. c {start_of_week.strftime('%d.%m.%Y')} по {end_of_week.strftime('%d.%m.%Y')}",
+                                payment_type=f'Премия отгрузка менеджер {manager.name}',
+                                date=new_shipment.date,
+                                shipment_id=new_shipment.id
+                            )
+                            db.session.add(addbalancerop)
         else:
             isPaid = IsPaidManagerBonus.query.filter_by(
                 manager_name=manager.name, start_week=start_of_week).first()
@@ -1350,6 +1384,10 @@ def add_shipment():
                 del_paid = IsPaidManagerBonus.query.get_or_404(isPaid.id)
                 db.session.delete(del_bonus)
                 db.session.delete(del_paid)
+            if department.rop_percent > 0:
+                RBalance = ManagerBalance.query.filter_by(comment = f"Бонус за закрытую цель отдела. c {start_of_week.strftime('%d.%m.%Y')} по {end_of_week.strftime('%d.%m.%Y')}", payment_type=f'Премия отгрузка менеджер {manager.name}').first()
+                if RBalance:
+                    db.session.delete(RBalance)
 
 
 
@@ -1375,7 +1413,10 @@ def add_shipment():
         if total_delta >= department.weekly_goal:
             isPaidDep = IsPaidDepartmentBonus.query.filter_by(department_id=department.id, start_week = start_of_week).first()
             if isPaidDep and isPaidDep.isPaid:
-                pass
+                for manager_id, delta in manager_deltas.items():
+                    id_dep_bonus = ManagerBalance.query.filter_by(manager_id=manager_id, comment=f"Бонус за закрытую цель отдела. c {start_of_week.strftime('%d.%m.%Y')} по {end_of_week.strftime('%d.%m.%Y')}").first()
+                    id_dep_bonus.amount = delta*(0.05)
+                    db.session.flush()
             else:
                 for manager_id, delta in manager_deltas.items():
                     balance_entry = ManagerBalance(
@@ -1421,6 +1462,8 @@ def edit_shipment(id):
     managers = [m.name for m in Manager.query.all()]
 
     old_manager = Manager.query.filter_by(name=shipment.manager).first()
+    rop = Manager.query.filter_by(role='РОП', department_id=old_manager.department_id).first()
+    department = Department.query.filter_by(id=old_manager.department_id).first()
     
     if request.method == 'POST':
         # Сохраняем нового менеджера и дату из формы ДО обновления объекта
@@ -1448,7 +1491,12 @@ def edit_shipment(id):
                 isPaid = IsPaidManagerBonus.query.filter_by(
                     manager_name=old_manager.name, start_week=start_of_week).first()
                 if isPaid and isPaid.isPaid:
-                    pass
+                    bonus = ManagerBalance.query.get(isPaid.id_man_bonus)
+                    bonus.amount = (period_shipments_sum*0.05)
+                    if department.rop_percent > 0:
+                        RBalance = ManagerBalance.query.filter_by(shipment_id=shipment.id, payment_type=f'Отгрузка менеджер {old_manager.name}').first()
+                        if RBalance:
+                            RBalance.amount = period_shipments_sum*0.015
                 else:
                     addBonusBalance = ManagerBalance(
                         manager_id=old_manager .id,
@@ -1467,6 +1515,18 @@ def edit_shipment(id):
                         id_man_bonus=addBonusBalance.id
                     )
                     db.session.add(isPaidBonus)
+                    if department.rop_percent > 0:
+                        if rop:
+                            if old_manager.role == 'Менеджер':
+                                addbalancerop = ManagerBalance(
+                                    manager_id = rop.id,
+                                    amount = period_shipments_sum*0.015,
+                                    comment = f"Бонус за закрытую цель отдела. c {start_of_week.strftime('%d.%m.%Y')} по {end_of_week.strftime('%d.%m.%Y')}",
+                                    payment_type=f'Премия отгрузка менеджер {old_manager.name}',
+                                    date=shipment.date,
+                                    shipment_id=shipment.id
+                                )
+                                db.session.add(addbalancerop)
 
             else:
                 isPaid = IsPaidManagerBonus.query.filter_by(
@@ -1477,10 +1537,13 @@ def edit_shipment(id):
                     del_new_paid = IsPaidManagerBonus.query.get_or_404(isPaid.id)
                     db.session.delete(del_new_bonus)
                     db.session.delete(del_new_paid)
+                if department.rop_percent > 0:
+                    RBalance = ManagerBalance.query.filter_by(comment = f"Бонус за закрытую цель отдела. c {start_of_week.strftime('%d.%m.%Y')} по {end_of_week.strftime('%d.%m.%Y')}", payment_type=f'Премия отгрузка менеджер {old_manager.name}').first()
+                    if RBalance:
+                        db.session.delete(RBalance)
    
 
         #Удаляем старую выплату отдела
-        department = Department.query.filter_by(id=old_manager.department_id).first()
 
         if department:
             dep_managers = Manager.query.filter_by(department_id = department.id).all()
@@ -1506,7 +1569,10 @@ def edit_shipment(id):
             if total_delta >= department.weekly_goal:
                 isPaidDep = IsPaidDepartmentBonus.query.filter_by(department_id=department.id, start_week = start_of_week).first()
                 if isPaidDep and isPaidDep.isPaid:
-                    pass
+                    for manager_id, delta in manager_deltas.items():
+                        id_dep_bonus = ManagerBalance.query.filter_by(manager_id=manager_id, comment=f"Бонус за закрытую цель отдела. c {start_of_week.strftime('%d.%m.%Y')} по {end_of_week.strftime('%d.%m.%Y')}").first()
+                        id_dep_bonus.amount = delta*(0.05)
+                        db.session.flush()
                 else:
                     for manager_id, delta in manager_deltas.items():
                         balance_entry = ManagerBalance(
@@ -1534,6 +1600,17 @@ def edit_shipment(id):
                         print(del_dep_bonus)
                     del_dep_paid = IsPaidDepartmentBonus.query.get_or_404(isPaidDep.id)
                     db.session.delete(del_dep_paid)
+
+
+
+        forward = Manager.query.filter_by(name=shipment.forwarder_name).first()
+
+        if forward:
+            forwardPay = ManagerBalance.query.filter_by(manager_id=forward.id, payment_type='Экспедиторские', shipment_id=shipment.id).first()
+            if forwardPay:
+                delPay = ManagerBalance.query.get_or_404(forwardPay.id)
+                db.session.delete(delPay)
+
 
         db.session.commit()
 
@@ -1583,6 +1660,20 @@ def edit_shipment(id):
                 shipment_id=shipment.id
             )
             db.session.add(addbalance)
+
+
+        new_forward = Manager.query.filter_by(name=shipment.forwarder_name).first()
+        if new_forward:
+            addforward = ManagerBalance(
+                manager_id=new_forward.id,
+                amount=shipment.forwarder_payment,
+                comment=f"Экспедиторские, отгрузка:. ID: {shipment.deal_id}",
+                payment_type='Экспедиторские',
+                date=shipment.date,
+                shipment_id=shipment.id
+            )
+        
+            db.session.add(addforward)
     
 
 
@@ -1590,23 +1681,24 @@ def edit_shipment(id):
         rop = Manager.query.filter_by(role='РОП', department_id=manager.department_id).first()
         department = Department.query.filter_by(id=manager.department_id).first()
         newRBalance = ManagerBalance.query.filter_by(shipment_id=id, payment_type=f'Отгрузка менеджер {old_manager.name}').first()
-        if old_manager:
-            if rop:
-                if manager.role == 'Менеджер':
-                    newRBalance.manager_id = rop.id
-                    newRBalance.amount = shipment.delta * department.rop_percent
-                    newRBalance.date = shipment.date
-                    newRBalance.comment = f"Отгрузка. ID: {shipment.deal_id}"
-        else:
-            addbalancerop = ManagerBalance(
-                manager_id = rop.id,
-                amount = shipment.delta*department.rop_percent,
-                comment = f"Отгрузка. ID: {shipment.deal_id}",
-                payment_type=f'Отгрузка менеджер {manager.name}',
-                date=shipment.date,
-                shipment_id=shipment.id
-            )
-            db.session.add(addbalancerop)
+        if department.rop_percent > 0:
+            if old_manager:
+                if rop:
+                    if manager.role == 'Менеджер':
+                        newRBalance.manager_id = rop.id
+                        newRBalance.amount = shipment.delta * department.rop_percent
+                        newRBalance.date = shipment.date
+                        newRBalance.comment = f"Отгрузка. ID: {shipment.deal_id}"
+            else:
+                addbalancerop = ManagerBalance(
+                    manager_id = rop.id,
+                    amount = shipment.delta*department.rop_percent,
+                    comment = f"Отгрузка. ID: {shipment.deal_id}",
+                    payment_type=f'Отгрузка менеджер {manager.name}',
+                    date=shipment.date,
+                    shipment_id=shipment.id
+                )
+                db.session.add(addbalancerop)
         
         db.session.flush()
         
@@ -1632,7 +1724,12 @@ def edit_shipment(id):
             isPaidManager = IsPaidManagerBonus.query.filter_by(manager_name=manager.name,
                                                                start_week=start_of_week).first()
             if isPaidManager and isPaidManager.isPaid:
-                pass
+                bonus = ManagerBalance.query.get(isPaidManager.id_man_bonus)
+                bonus.amount = (period_shipments_sum*0.05)
+                if department.rop_percent > 0:
+                    RBalance = ManagerBalance.query.filter_by(shipment_id=shipment.id, payment_type=f'Отгрузка менеджер {manager.name}').first()
+                    if RBalance:
+                        RBalance.amount = period_shipments_sum*0.015
             else:
                 addbonusbalance = ManagerBalance(
                     manager_id=manager.id,
@@ -1651,6 +1748,18 @@ def edit_shipment(id):
                     id_man_bonus=addbonusbalance.id
                 )
                 db.session.add(isPaid)
+                if department.rop_percent > 0:
+                    if rop:
+                        if manager.role == 'Менеджер':
+                            addbalancerop = ManagerBalance(
+                                manager_id = rop.id,
+                                amount = period_shipments_sum*0.015,
+                                comment = f"Бонус за закрытую цель отдела. c {start_of_week.strftime('%d.%m.%Y')} по {end_of_week.strftime('%d.%m.%Y')}",
+                                payment_type=f'Премия отгрузка менеджер {manager.name}',
+                                date=shipment.date,
+                                shipment_id=shipment.id
+                            )
+                            db.session.add(addbalancerop)
 
         else:
             isPaid = IsPaidManagerBonus.query.filter_by(
@@ -1661,6 +1770,10 @@ def edit_shipment(id):
                 del_paid = IsPaidManagerBonus.query.get_or_404(isPaid.id)
                 db.session.delete(del_bonus)
                 db.session.delete(del_paid)
+            if department.rop_percent > 0:
+                RBalance = ManagerBalance.query.filter_by(comment = f"Бонус за закрытую цель отдела. c {start_of_week.strftime('%d.%m.%Y')} по {end_of_week.strftime('%d.%m.%Y')}", payment_type=f'Премия отгрузка менеджер {old_manager.name}').first()
+                if RBalance:
+                    db.session.delete(RBalance)
 
 
 
@@ -1679,7 +1792,10 @@ def edit_shipment(id):
         if total_delta >= department.weekly_goal:
             isPaidDep = IsPaidDepartmentBonus.query.filter_by(department_id=department.id, start_week = start_of_week).first()
             if isPaidDep and isPaidDep.isPaid:
-                pass
+                for manager_id, delta in manager_deltas.items():
+                    id_dep_bonus = ManagerBalance.query.filter_by(manager_id=manager_id, comment=f"Бонус за закрытую цель отдела. c {start_of_week.strftime('%d.%m.%Y')} по {end_of_week.strftime('%d.%m.%Y')}").first()
+                    id_dep_bonus.amount = delta*(0.05)
+                    db.session.flush()
             else:
                 for manager_id, delta in manager_deltas.items():
                     balance_entry = ManagerBalance(
@@ -1724,9 +1840,19 @@ def edit_shipment(id):
 def delete_shipment(id):
     shipment = Shipment.query.get_or_404(id)
     manager = Manager.query.filter_by(name=shipment.manager).first()
+    rop = Manager.query.filter_by(role='РОП', department_id=manager.department_id).first()
+    department = Department.query.filter_by(id=manager.department_id).first()
     delMBalance = ManagerBalance.query.filter_by(shipment_id=id, payment_type='Отгрузка').first()
     delRBalance = ManagerBalance.query.filter_by(shipment_id=id, payment_type=f'Отгрузка менеджер {manager.name}').first()
     old_date = shipment.date
+
+    forward = Manager.query.filter_by(name=shipment.forwarder_name).first()
+
+    if forward:
+        forwardPay = ManagerBalance.query.filter_by(manager_id=forward.id, payment_type='Экспедиторские', shipment_id=shipment.id).first()
+        if forwardPay:
+            delPay = ManagerBalance.query.get_or_404(forwardPay.id)
+            db.session.delete(delPay)
 
     db.session.commit()
 
@@ -1749,7 +1875,12 @@ def delete_shipment(id):
             isPaid = IsPaidManagerBonus.query.filter_by(
                 manager_name=manager.name, start_week=start_of_week).first()
             if isPaid and isPaid.isPaid:
-                pass
+                bonus = ManagerBalance.query.get(isPaid.id_man_bonus)
+                bonus.amount = (period_shipments_sum*0.05)
+                if department.rop_percent > 0:
+                    RBalance = ManagerBalance.query.filter_by(shipment_id=id, payment_type=f'Отгрузка менеджер {manager.name}').first()
+                    if RBalance:
+                        RBalance.amount = period_shipments_sum*0.015
             else:
                 addBonusBalance = ManagerBalance(
                     manager_id=manager.id,
@@ -1768,6 +1899,18 @@ def delete_shipment(id):
                     id_man_bonus=addBonusBalance.id
                 )
                 db.session.add(isPaidBonus)
+                if department.rop_percent > 0:
+                    if rop:
+                        if manager.role == 'Менеджер':
+                            addbalancerop = ManagerBalance(
+                                manager_id = rop.id,
+                                amount = period_shipments_sum*0.015,
+                                comment = f"Бонус за закрытую цель отдела. c {start_of_week.strftime('%d.%m.%Y')} по {end_of_week.strftime('%d.%m.%Y')}",
+                                payment_type=f'Премия отгрузка менеджер {manager.name}',
+                                date=old_date,
+                                shipment_id=id
+                            )
+                            db.session.add(addbalancerop)
 
         else:
             isPaid = IsPaidManagerBonus.query.filter_by(
@@ -1778,6 +1921,10 @@ def delete_shipment(id):
                 del_new_paid = IsPaidManagerBonus.query.get_or_404(isPaid.id)
                 db.session.delete(del_new_bonus)
                 db.session.delete(del_new_paid)
+            if department.rop_percent > 0:
+                RBalance = ManagerBalance.query.filter_by(comment = f"Бонус за закрытую цель отдела. c {start_of_week.strftime('%d.%m.%Y')} по {end_of_week.strftime('%d.%m.%Y')}", payment_type=f'Премия отгрузка менеджер {manager.name}').first()
+                if RBalance:
+                    db.session.delete(RBalance)
 
     if delMBalance:
         del_bonus = ManagerBalance.query.get_or_404(delMBalance.id)
@@ -1815,7 +1962,10 @@ def delete_shipment(id):
         if total_delta >= department.weekly_goal:
             isPaidDep = IsPaidDepartmentBonus.query.filter_by(department_id=department.id, start_week = start_of_week).first()
             if isPaidDep and isPaidDep.isPaid:
-                pass
+                for manager_id, delta in manager_deltas.items():
+                    id_dep_bonus = ManagerBalance.query.filter_by(manager_id=manager_id, comment=f"Бонус за закрытую цель отдела. c {start_of_week.strftime('%d.%m.%Y')} по {end_of_week.strftime('%d.%m.%Y')}").first()
+                    id_dep_bonus.amount = delta*(0.05)
+                    db.session.flush()
             else:
                 for manager_id, delta in manager_deltas.items():
                     balance_entry = ManagerBalance(
@@ -1843,9 +1993,6 @@ def delete_shipment(id):
                     print(del_dep_bonus)
                 del_dep_paid = IsPaidDepartmentBonus.query.get_or_404(isPaidDep.id)
                 db.session.delete(del_dep_paid)
-
-
-
 
     db.session.commit()
     return redirect(url_for('shipments'))

@@ -81,12 +81,24 @@
         <div class="card-body">
             <h5 class="card-title">Информация</h5>
             <p>Процент: <strong>{{ (manager.percent * 100)|round(2) }}%</strong></p>
+
+            {% if manager.name != 'Оборотов В.С.' %}
+            {% if manager.name != 'Котов А.С.' %}
             <p>Цель: <strong class="format-number">{{manager.goal}}</strong></p>
+            {% endif %}
+            {% endif %}
+
             <p>Отдел: <strong>{{department.name}}</strong></p>
             <p>Должность: <strong>{{manager.role}}</strong></p>
+
+            {% if manager.name != 'Оборотов В.С.' %}
+            {% if manager.name != 'Котов А.С.' %}
             {% if manager.role == 'РОП' %}
             <p>Процент от продаж менеджеров: <strong>{{department.rop_percent * 100}}%</strong></p>
             {% endif %}
+            {% endif %}
+            {% endif %}
+
             <h5 class="mb-3 text-secondary">
                 Баланс менеджера: <strong class="format-number {{ balance | delta_class }}">{{ balance 
                     }}</strong>
